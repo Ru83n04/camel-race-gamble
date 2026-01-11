@@ -68,6 +68,7 @@ export const useGameLogic = () => {
   });
 
   const [isAnimating, setIsAnimating] = useState(false);
+  const [isShuffling, setIsShuffling] = useState(false);
 
   const startGame = useCallback(() => {
     const deck = shuffleDeck(createDeck());
@@ -122,20 +123,30 @@ export const useGameLogic = () => {
   }, []);
 
   const drawCard = useCallback(() => {
-    if (gameState.gamePhase !== 'playing' || isAnimating) {
+    if (gameState.gamePhase !== 'playing' || isAnimating || isShuffling) {
+      return;
+    }
+
+    // Check if we need to reshuffle
+    if (gameState.deck.length === 0) {
+      setIsShuffling(true);
+      
+      setTimeout(() => {
+        setGameState(prev => ({
+          ...prev,
+          deck: shuffleDeck([...prev.drawnCards]),
+          drawnCards: [],
+        }));
+        setIsShuffling(false);
+      }, 1500); // Shuffle animation duration
+      
       return;
     }
 
     setIsAnimating(true);
 
     setGameState(prev => {
-      let newDeck = [...prev.deck];
-      
-      // If deck is empty, reshuffle all drawn cards
-      if (newDeck.length === 0) {
-        newDeck = shuffleDeck([...prev.drawnCards]);
-      }
-      
+      const newDeck = [...prev.deck];
       const drawnCard = newDeck.pop()!;
       
       // Move the camel forward (goal is now at position 6)
@@ -165,7 +176,7 @@ export const useGameLogic = () => {
     });
 
     setTimeout(() => setIsAnimating(false), 600);
-  }, [gameState.gamePhase, gameState.deck.length, isAnimating, checkPenaltyCards]);
+  }, [gameState.gamePhase, gameState.deck.length, isAnimating, isShuffling, checkPenaltyCards]);
 
   const resetGame = useCallback(() => {
     const deck = shuffleDeck(createDeck());
@@ -187,5 +198,6 @@ export const useGameLogic = () => {
     startGame,
     resetGame,
     isAnimating,
+    isShuffling,
   };
 };
