@@ -9,6 +9,7 @@ interface CardDeckProps {
   onDrawCard: () => void;
   isPlaying: boolean;
   isAnimating: boolean;
+  isShuffling: boolean;
 }
 
 export const CardDeck: React.FC<CardDeckProps> = ({
@@ -17,18 +18,36 @@ export const CardDeck: React.FC<CardDeckProps> = ({
   onDrawCard,
   isPlaying,
   isAnimating,
+  isShuffling,
 }) => {
   return (
     <div className="flex flex-col items-center gap-4">
+      {/* Shuffle overlay */}
+      {isShuffling && (
+        <div className="fixed inset-0 bg-foreground/50 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-card rounded-2xl p-6 sm:p-8 shadow-2xl border-4 border-primary animate-bounce-in text-center">
+            <div className="text-4xl sm:text-6xl mb-4 shuffle-animation">
+              🃏🔀🃏
+            </div>
+            <p className="font-game text-xl sm:text-2xl text-primary">
+              Karten werden gemischt...
+            </p>
+            <p className="text-muted-foreground text-sm mt-2">
+              Das Deck wird neu gemischt!
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center gap-4 sm:gap-8">
         {/* Draw pile */}
         <div className="relative">
           <button
             onClick={onDrawCard}
-            disabled={!isPlaying || isAnimating || remainingCards === 0}
+            disabled={!isPlaying || isAnimating || isShuffling}
             className={cn(
               "relative transition-all duration-200 transform",
-              isPlaying && remainingCards > 0 && !isAnimating 
+              isPlaying && !isAnimating && !isShuffling
                 ? "hover:scale-105 active:scale-95 cursor-pointer pulse-glow rounded-lg" 
                 : "opacity-50 cursor-not-allowed"
             )}
@@ -44,7 +63,10 @@ export const CardDeck: React.FC<CardDeckProps> = ({
           </button>
           
           {/* Remaining count */}
-          <div className="absolute -bottom-2 -right-2 bg-primary text-primary-foreground rounded-full w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center text-xs sm:text-sm font-bold shadow-lg">
+          <div className={cn(
+            "absolute -bottom-2 -right-2 bg-primary text-primary-foreground rounded-full w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center text-xs sm:text-sm font-bold shadow-lg transition-all",
+            remainingCards === 0 && "bg-accent animate-pulse"
+          )}>
             {remainingCards}
           </div>
         </div>
@@ -72,9 +94,11 @@ export const CardDeck: React.FC<CardDeckProps> = ({
       </div>
 
       {/* Instructions */}
-      {isPlaying && (
+      {isPlaying && !isShuffling && (
         <p className="text-sm text-muted-foreground text-center">
-          Tippe auf den Kartenstapel zum Ziehen
+          {remainingCards === 0 
+            ? "Tippe zum Mischen!" 
+            : "Tippe auf den Kartenstapel zum Ziehen"}
         </p>
       )}
     </div>

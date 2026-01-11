@@ -6,7 +6,7 @@ import { CardDeck } from './CardDeck';
 import { GameInfo } from './GameInfo';
 
 export const CamelRace: React.FC = () => {
-  const { gameState, drawCard, startGame, resetGame, isAnimating } = useGameLogic();
+  const { gameState, drawCard, startGame, resetGame, isAnimating, isShuffling } = useGameLogic();
 
   return (
     <div className="min-h-screen bg-desert-gradient flex flex-col">
@@ -37,6 +37,7 @@ export const CamelRace: React.FC = () => {
               onDrawCard={drawCard}
               isPlaying={gameState.gamePhase === 'playing'}
               isAnimating={isAnimating}
+              isShuffling={isShuffling}
             />
 
             <GameInfo drawnCards={gameState.drawnCards} />
