@@ -30,12 +30,12 @@ const shuffleDeck = (deck: Card[]): Card[] => {
   return shuffled;
 };
 
-// Initialize penalty cards (hidden cards above the track)
+// Initialize penalty cards (hidden cards above the track) - now 5 cards for 6 positions
 const createPenaltyCards = (deck: Card[]): { penaltyCards: PenaltyCard[], remainingDeck: Card[] } => {
   const penaltyCards: PenaltyCard[] = [];
   const remainingDeck = [...deck];
   
-  for (let i = 1; i <= 7; i++) {
+  for (let i = 1; i <= 5; i++) {
     const card = remainingDeck.pop()!;
     penaltyCards.push({
       position: i,
@@ -92,8 +92,8 @@ export const useGameLogic = () => {
     let updatedCamels = [...camels];
     let revealedCard: Card | null = null;
 
-    // Check each penalty position from 1 to 7
-    for (let pos = 1; pos <= 7; pos++) {
+    // Check each penalty position from 1 to 5
+    for (let pos = 1; pos <= 5; pos++) {
       const penaltyCardIndex = updatedPenaltyCards.findIndex(p => p.position === pos && !p.revealed);
       if (penaltyCardIndex === -1) continue;
 
@@ -122,20 +122,26 @@ export const useGameLogic = () => {
   }, []);
 
   const drawCard = useCallback(() => {
-    if (gameState.gamePhase !== 'playing' || gameState.deck.length === 0 || isAnimating) {
+    if (gameState.gamePhase !== 'playing' || isAnimating) {
       return;
     }
 
     setIsAnimating(true);
 
     setGameState(prev => {
-      const newDeck = [...prev.deck];
+      let newDeck = [...prev.deck];
+      
+      // If deck is empty, reshuffle all drawn cards
+      if (newDeck.length === 0) {
+        newDeck = shuffleDeck([...prev.drawnCards]);
+      }
+      
       const drawnCard = newDeck.pop()!;
       
-      // Move the camel forward
+      // Move the camel forward (goal is now at position 6)
       let newCamels = prev.camels.map(camel => 
         camel.suit === drawnCard.suit 
-          ? { ...camel, position: Math.min(8, camel.position + 1) }
+          ? { ...camel, position: Math.min(6, camel.position + 1) }
           : camel
       );
 
@@ -143,8 +149,8 @@ export const useGameLogic = () => {
       const { updatedCamels, updatedPenaltyCards } = checkPenaltyCards(newCamels, prev.penaltyCards);
       newCamels = updatedCamels;
 
-      // Check for winner
-      const winner = newCamels.find(c => c.position >= 8);
+      // Check for winner (goal is now at position 6)
+      const winner = newCamels.find(c => c.position >= 6);
       
       return {
         ...prev,
